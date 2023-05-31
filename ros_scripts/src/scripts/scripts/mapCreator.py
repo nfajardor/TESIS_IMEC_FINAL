@@ -366,7 +366,100 @@ class MapCreator:
                     for i in range(0,len(configs)):
                         print("- {}".format(configs[i]))
                 elif op == '3':
-                    pass
+                    print("Select the method:\n1 - Random add\n2 - Manual add")
+                    op = input()
+                    if op == '1':
+                        print("Random add selected. Input the number of rewards")
+                        stepOk = False
+                        while not stepOk:
+                            try:
+                                n = int(input())
+                                if n > 0:
+                                    stepOk = True
+                                else:
+                                    print("Please enter a valid number")
+                            except:
+                                print("Please enter a valid number")
+                        current_configs = data["rwd_configs"]
+                        rwd_config = []
+                        i, j = 0, 0
+                        mappa = []
+                        for i in range(0,len(mapp)):
+                            mappa.append([])
+                            for j in range(0,len(mapp[i])):
+                                mappa[i].append(mapp[i][j])
+                        w = len(mappa)
+                        h = len(mappa[0])
+                        proba = w*h
+                        while len(rwd_config) < n:
+                            if j >= len(mappa[i]):
+                                j = 0
+                                i += 1
+                            if i >= len(mappa):
+                                i = 0
+                            if mappa[i][j] == 0:
+                                if random.randint(0,proba) <= n:
+                                    mappa[i][j] = 2
+                                    rwd_config.append([j,i])
+                            j += 1
+                        current_configs.append(rwd_config)
+                        data["rwd_configs"] = current_configs
+                        data["map"] = mapp
+                        json_data = json.dumps(data)
+                        with open(self.route + map_selected + ".json",'w') as file:
+                            file.write(json_data)
+
+                    elif op == '2':
+                        print("Manual adding selected. Please select the number of rewards that you want to add.")
+                        stepOk = False
+                        while not stepOk:
+                            try:
+                                n = int(input())
+                                if n > 0:
+                                    stepOk = True
+                                else:
+                                    print("Please enter a valid number of rewards")
+                            except:
+                                print("Please enter a valid number of rewards")
+                        current_configs = data["rwd_configs"]
+                        rwd_config = []
+                        mappa = []
+                        for i in range(0,len(mapp)):
+                            mappa.append([])
+                            for j in range(0,len(mapp[i])):
+                                mappa[i].append(mapp[i][j])
+                        h = len(mappa)
+                        w = len(mappa[0])
+                        while len(rwd_config) < n:
+                            print("Adding the reward {}.".format(len(rwd_config)+1))
+                            stepOk = False
+                            while not stepOk:
+                                try:
+                                    print("Input the column")
+                                    x = int(input())
+                                    if x >= 0 and x < w:
+                                        print("Input the row:")
+                                        y = int(input())
+                                        if y >= 0 and y < h:
+                                            print("Currently at {},{}: {}".format(x,y,mappa[y][x]))
+                                            if mappa[y][x] == 0:
+                                                mappa[y][x] = 3
+                                                rwd_config.append([x,y])
+                                                stepOk = True
+                                            else:
+                                                print("You can't put a reward here")
+                                        else:
+                                            print("Please enter a valid row")
+                                    else:
+                                        print("please enter a valid column")
+                                except:
+                                    print("Please input a valid coordinate")
+                        current_configs.append(rwd_config)
+                        data["rwd_configs"] = current_configs
+                        data["map"] = mapp
+                        json_data = json.dumps(data)
+                        with open(self.route + map_selected + ".json",'w') as file:
+                            file.write(json_data)
                 elif op == '4':
                     print("These are the current reward configurations for the map:")
                     configs = data["rwd_configs"]
