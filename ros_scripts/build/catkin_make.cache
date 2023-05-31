@@ -1,0 +1,2 @@
+scripts
+-DCATKIN_DEVEL_PREFIX=/home/nicolas/Documents/TESIS_FINAL/TESIS_IMEC_FINAL/ros_scripts/devel -DCMAKE_INSTALL_PREFIX=/home/nicolas/Documents/TESIS_FINAL/TESIS_IMEC_FINAL/ros_scripts/install -G Unix Makefiles
