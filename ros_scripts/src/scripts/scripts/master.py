@@ -3,7 +3,9 @@ import rospy
 from std_msgs.msg import String
 import random
 import math
+from pickRewards import PickRewards
 from mapCreator import MapCreator
+from findReward import FindReward
 
 if __name__ == '__main__':
     exitApp = False
@@ -29,7 +31,21 @@ if __name__ == '__main__':
                     print('Please input a valid option')
 
         elif option == '2':
-            print("Task Selection")
+            inTask = True
+            while inTask:
+                print("Select the task that you want to execute:\n0 - Exit\n1 - Pick Rewards\n2 - Find Reward")
+                option = input()
+                if option == '0':
+                    print("Exiting the task menu")
+                    inTask = False
+                elif option == '1':
+                    PickRewards()
+                elif option == '2':
+                    FindReward()
+                else:
+                    print("Please input a valid option")
+
+
         elif option == '3':
             print("Exiting the app")
             exitApp = True
