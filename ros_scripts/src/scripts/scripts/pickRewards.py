@@ -430,20 +430,20 @@ class PickRewards:
             self.bot_instructions.append([])
             ori = copy.deepcopy(bot[2])
             pos = copy.deepcopy(bot[1])
-            print("Setting the route for bot {} with pos {} and ori {}".format(bot[0],pos,ori))
+            #print("Setting the route for bot {} with pos {} and ori {}".format(bot[0],pos,ori))
             step = 0
             #While the route is not complete
             while step < (len(self.bot_routes[i])-1):
-                print("Checking step {} of robot {}: {}".format(step,bot[0],self.bot_routes[i][step]))
+                #print("Checking step {} of robot {}: {}".format(step,bot[0],self.bot_routes[i][step]))
                 cur_obj = copy.deepcopy(self.bot_routes[i][step])
-                print("Current objective orientation is {}".format(cur_obj))
+                #print("Current objective orientation is {}".format(cur_obj))
 
                 #Check if the current orientation is different from objective
                 if cur_obj != ori:
                     instruction = 0
                     ammount = self.get_rotation(ori,cur_obj)
                     self.bot_instructions[i].append([instruction,ammount])
-                    print("INSTRUCTION ADDED:\n{} added inplace rotation from {} to {}".format(bot[0],ori,cur_obj))
+                    #print("INSTRUCTION ADDED ({},{}):\n{} added inplace rotation from {} to {}".format(instruction, ammount, bot[0],ori,cur_obj))
                     ori = cur_obj
                 blocks = 0
                 while ori == cur_obj:
@@ -461,19 +461,55 @@ class PickRewards:
                         instruction = 4
                         ammount = blocks
                         adv = copy.deepcopy(self.get_ori_vector(ori))
-                        for b in range((0,blocks)):
+                        for b in range(0,blocks):
                             pos[0] += adv[0]
                             pos[1] += adv[1]
                         self.bot_instructions[i].append([instruction,ammount])
-                        print("INSTRUCTION ADDED:\n{} added forward advance of {} blocks".format(bot[0],blocks))
+                        #print("INSTRUCTION ADDED ({},{}):\n{} added forward advance of {} blocks".format(instruction, ammount, bot[0],blocks))
                 
                     #Turning
                     else:
-                        pass
-                else:
-                    self.bot_instructions[i].append(4,blocks)
-                    print("INSTRUCTION ADDED:\n{} added forward advance of {} blocks".format(bot[0],blocks))
+                        vector = []
+                        if temp_instructions[1] == 0:
+                            #Turn right after some blank blocks
+                            vector = self.get_ori_vector(self.turn_ori(ori,3))
+                        else:
+                            #Turn left after some blank blocks
+                            vector = self.get_ori_vector(self.turn_ori(ori,1))
+                        inBlock = False
+                        empty_blocks = 0
+                        for b in range(0,blocks+1):
+                            adj_pos = [pos[0] + vector[0], pos[1] + vector[1]]
+                            
+                            if inBlock:
+                                #If the adjacent block is solid
 
+                                if self.map[adj_pos[1]][adj_pos[0]] != 1:
+                                    #If finds that the adj block is empty
+                                    empty_blocks += 1
+                                    inBlock = False
+
+                            else:
+                                #If the adjacent block is empty
+                                
+                                if self.map[adj_pos[1]][adj_pos[0]] == 1:
+                                    #If finds that the adj block is solid
+                                    inBlock = True
+
+                            if b < blocks:
+                                adv = self.get_ori_vector(ori)
+                                pos[0] += adv[0]
+                                pos[1] += adv[1]
+                        instruction = 1 + temp_instructions[1]
+                        ammount = empty_blocks-1
+                        ori = cur_obj
+                        self.bot_instructions[i].append([instruction,ammount])
+                        #print("INSTRUCTION ADDED ({},{}):\n{} added turning in direction {} after an advand of {} empty blocks".format(instruction, ammount, bot[0],instruction,empty_blocks))
+
+                else:
+                    self.bot_instructions[i].append([4,blocks])
+                    #print("INSTRUCTION ADDED ({},{}):\n{} added forward advance of {} blocks".format(4, blocks, bot[0],blocks))
+            print("{}'s list of instructions is: {}".format(bot[0],self.bot_instructions[i]))
 
 
 
@@ -492,7 +528,14 @@ class PickRewards:
         self.set_bots_route()
         #Set the instructions for the robots
         self.set_bot_instructions()
+        print("_______________________________")
+        print("_______________________________")
+        print("TASK ALL SET UP")
+        print("_______________________________")
+        print("_______________________________")
 
+    def initialize_ros(self):
+        pass
 
     def __init__(self):
         self.route = "./../data/"
@@ -517,4 +560,5 @@ class PickRewards:
         self.set_up_task()
 
         #Initialize ROS
+
 
