@@ -3,12 +3,14 @@ import random
 import os
 import math
 import time
+import copy
 import json
 
 #Class that handles the maps
 class MapCreator:
     #Returns all of the edges that connect the tree to vertices that are not a part of it. It has a 'DEL' probability to add an edge that will create a cycle.
     def getAdjEdges(self, A,L, cycle,w,h):
+        #print("A={}".format(A))
         R = []
         for i in range(0,len(A)):
             y, x = A[i][1], A[i][0]
@@ -28,27 +30,27 @@ class MapCreator:
                 if L[y+1][x] > 0:
                     if [x,y+2] not in A:
                         R.append([[x,y+1],L[y+1][x],[0,1]])
-                else:
-                    if random.randint(1,1000) < cycle:
-                        R.append([[x,y+1],L[y+1][x],[0,1]])  
+                    else:
+                        if random.randint(1,1000) < cycle:
+                            R.append([[x,y+1],L[y+1][x],[0,1]])  
             # LEFT
             if x > 0:
             #print("x>0")
                 if L[y][x-1] > 0:
                     if [x-2,y] not in A:
                         R.append([[x-1,y],L[y][x-1],[-1,0]])
-                else:
-                    if random.randint(1,1000) < cycle:
-                        R.append([[x-1,y],L[y][x-1],[-1,0]])  
+                    else:
+                        if random.randint(1,1000) < cycle:
+                            R.append([[x-1,y],L[y][x-1],[-1,0]])  
             # RIGHT
             if x < (2*w-2):
             #print("x<w-2")
-                if L[y][x+1]:
+                if L[y][x+1] > 0:
                     if [x+2,y] not in A:
                         R.append([[x+1,y],L[y][x+1],[1,0]])
-                else:
-                    if random.randint(1,1000) < cycle:
-                        R.append([[x+1,y],L[y][x+1],[1,0]])  
+                    else:
+                        if random.randint(1,1000) < cycle:
+                            R.append([[x+1,y],L[y][x+1],[1,0]])  
         return R
 
     ## Creating the maze array. 0 for path, > 0 for path
@@ -75,6 +77,7 @@ class MapCreator:
                 #For any other case (the edges that connect the vertices) put a random weight between 1 and the ammount of cells in the matrix, so that a MST algorithm can be implemented to create the maze
                 else:
                     L[i][j] = random.randint(1,(2*h-1)*(2*w-1))
+            print(L[i])
 
 
         ## Set the start coordinates for the MST. Since Prim's algorithm will be implemented, a vertex is picked to begin the construction of the tree.
@@ -94,6 +97,8 @@ class MapCreator:
         T.append([x,y]) #Adding the first vertex
         #print(T)
         while len(T) < w*h and cycle < 1000:
+            #print("T={}".format(T))
+            #print("{} - T is {}".format(len(T),T))
             Adj = self.getAdjEdges(T,L,cycle,w,h)  #gets all edges that go to new vertices (plus a probability to add vertices that make cycles)
             #print("Adj: {}".format(Adj))
             min = Adj[0][1]
@@ -171,8 +176,34 @@ class MapCreator:
         with open(self.route + mapName + ".json",'w') as file:
             file.write(json_data)
 
-
-
+    def get_existing_map(self):
+        list_of_maps = []
+        with open(self.route + "mapList.txt",'r') as file:
+            maps = file.readlines()
+        for line in maps:
+            l = line.strip()
+            list_of_maps.append(l)
+        print("Available maps:")
+        print("0 - Go back")
+        for i in range(0,len(list_of_maps)):
+            print("{} - {}".format(i+1,list_of_maps[i]))
+        stepOk = False
+        mapp = None
+        while not stepOk:
+            print("Input the index of the desired map")
+            try:
+                map_index = int(input())
+                if map_index == 0:
+                    return mapp
+                if map_index < 0 or map_index > len(list_of_maps):
+                    print("Please input a valid index")
+                else:    
+                    map_name = list_of_maps[map_index-1]
+                    with open(self.route + map_name +".json",'r') as file:
+                        data = json.load(file)
+                    return data['map'], map_name
+            except:
+                print("Please input a valid index")
 
     #Asks the user for the map parameters and calls the appropriate method for creating it 
     def create_new_map(self):
@@ -222,6 +253,124 @@ class MapCreator:
         self.persist_map(createdMap)
 
 
+    def create_robot_configuration(self,map_name):
+        with open(self.route + map_name+".json", 'r') as file:
+            data = json.load(file)
+        mapp = copy.deepcopy(data['map'])
+        print("Select the method to create the configuration:\n1 - Random add\n2 - Manual add")
+        op = input()
+        if op == '1':
+            print("Random add selected. Input the number of robots")
+            stepOk = False
+            while not stepOk:
+                try:
+                    n = int(input())
+                    if n > 0:
+                        stepOk = True
+                    else:
+                        print("Please enter a valid number")
+                except:
+                    print("Please enter a valid number")
+            current_configs = data["bot_configs"]
+            bot_config = []
+            i, j = 0, 0
+            mappa = []
+            for i in range(0,len(mapp)):
+                mappa.append([])
+                for j in range(0,len(mapp[i])):
+                    mappa[i].append(mapp[i][j])
+            w = len(mappa)
+            h = len(mappa[0])
+            proba = w*h
+            while len(bot_config) < n:
+                if j >= len(mappa[i]):
+                    j = 0
+                    i += 1
+                if i >= len(mappa):
+                    i = 0
+                if mappa[i][j] == 0:
+                    if random.randint(0,proba) <= n:
+                        mappa[i][j] = 3
+                        BO = math.pi*random.randint(0,3)/2
+                        ori = 'S'
+                        if BO < 1:
+                            ori = 'E'
+                        elif BO < 2:
+                            ori = 'N'
+                        elif BO < 4:
+                            ori  = 'W'
+                        bot_config.append(['epuck'+str(len(bot_config)+1),[j,i],ori])
+                j += 1
+            current_configs.append(bot_config)
+            data["bot_configs"] = current_configs
+            data["map"] = mapp
+            json_data = json.dumps(data)
+            with open(self.route + map_name + ".json",'w') as file:
+                file.write(json_data)
+
+        elif op == '2':
+            print("Manual adding selected. Please select the number of robots that you want to add.")
+            stepOk = False
+            while not stepOk:
+                try:
+                    n = int(input())
+                    if n > 0:
+                        stepOk = True
+                    else:
+                        print("Please enter a valid number of robots")
+                except:
+                    print("Please enter a valid number of robots")
+            current_configs = data["bot_configs"]
+            bot_config = []
+            mappa = []
+            for i in range(0,len(mapp)):
+                mappa.append([])
+                for j in range(0,len(mapp[i])):
+                    mappa[i].append(mapp[i][j])
+            h = len(mappa)
+            w = len(mappa[0])
+            while len(bot_config) < n:
+                print("Adding the robot {}.".format(len(bot_config)+1))
+                stepOk = False
+                while not stepOk:
+                    try:
+                        print("Input the column")
+                        x = int(input())
+                        if x >= 0 and x < w:
+                            print("Input the row:")
+                            y = int(input())
+                            if y >= 0 and y < h:
+                                print("Currently at {},{}: {}".format(x,y,mappa[y][x]))
+                                if mappa[y][x] == 0:
+                                    print("Input the orientation (N,S,E,W)")
+                                    ori = input()
+                                    if ori in ['N','S','W','E']:
+                                        mappa[y][x] = 3
+                                        bot_config.append(['epuck'+str(len(bot_config)+1),[x,y],ori])
+                                        stepOk = True
+                                    else:
+                                        print("please enter a valid orientation")
+                                else:
+                                    print("You can't put a robot here")
+                            else:
+                                print("Please enter a valid row")
+                        else:
+                            print("please enter a valid column")
+                    except:
+                        print("Please input a valid coordinate")
+            current_configs.append(bot_config)
+            data["bot_configs"] = current_configs
+            data["map"] = mapp
+            json_data = json.dumps(data)
+            with open(self.route + map_name + ".json",'w') as file:
+                file.write(json_data)
+    def select_robot_configuration(self, map_name):
+        with open(self.route + map_name + ".json",'r') as file:
+            data = json.load(file)
+        configuration_list = data['bot_configs']
+        print("List of Robot Configurations available for the map {}".format(map_name))
+        print("0 - Exit")
+       
     def edit_previous_map(self):
         print("Select the map to edit: ")
         list_of_maps = []
