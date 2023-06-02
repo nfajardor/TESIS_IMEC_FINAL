@@ -23,7 +23,6 @@ TexturedBackgroundLight {
   castShadows FALSE
 }
 RectangleArena {
-  translation 0 0 0
   floorSize 0.5 0.5
   floorTileSize 0.25 0.255
   floorAppearance Parquetry {
@@ -33,42 +32,42 @@ RectangleArena {
   wallHeight 0.05
 }
 WoodenBox {
-   translation 0.1 0.2 0.05
+  translation 0.1 0.2 0.05
   name "obs0"
   size 0.1 0.1 0.1
 }
 WoodenBox {
-   translation -0.2 0.1 0.05
+  translation -0.2 0.1 0.05
   name "obs1"
   size 0.1 0.1 0.1
 }
 WoodenBox {
-   translation -0.1 0.1 0.05
+  translation -0.1 0.1 0.05
   name "obs2"
   size 0.1 0.1 0.1
 }
 WoodenBox {
-   translation 0.1 0.1 0.05
+  translation 0.1 0.1 0.05
   name "obs3"
   size 0.1 0.1 0.1
 }
 WoodenBox {
-   translation -0.1 -0.1 0.05
+  translation -0.1 -0.1 0.05
   name "obs4"
   size 0.1 0.1 0.1
 }
 WoodenBox {
-   translation 0.1 -0.1 0.05
+  translation 0.1 -0.1 0.05
   name "obs5"
   size 0.1 0.1 0.1
 }
 WoodenBox {
-   translation -0.1 -0.2 0.05
+  translation -0.1 -0.2 0.05
   name "obs6"
   size 0.1 0.1 0.1
 }
 WoodenBox {
-   translation 0.1 -0.2 0.05
+  translation 0.1 -0.2 0.05
   name "obs7"
   size 0.1 0.1 0.1
 }
@@ -79,120 +78,61 @@ PointLight {
   location 0.2 -0.2 0.05
   radius 0.055
   castShadows TRUE
-}PointLight {
+}
+PointLight {
   attenuation 0.2 0.2 0.2
   color 0 1 0
   intensity 10
   location 0.2 0.2 0.05
   radius 0.055
   castShadows TRUE
-}PointLight {
+}
+PointLight {
   attenuation 0.2 0.2 0.2
   color 0 1 0
   intensity 10
-  location -0.1 0.0 0.05
+  location -0.1 0 0.05
   radius 0.055
   castShadows TRUE
-}PointLight {
+}
+PointLight {
   attenuation 0.2 0.2 0.2
   color 0 1 0
   intensity 10
   location -0.2 -0.1 0.05
   radius 0.055
   castShadows TRUE
-}PointLight {
+}
+PointLight {
   attenuation 0.2 0.2 0.2
   color 0 1 0
   intensity 10
   location 0.2 -0.1 0.05
   radius 0.055
   castShadows TRUE
-}PointLight {
+}
+PointLight {
   attenuation 0.2 0.2 0.2
   color 0 1 0
   intensity 10
-  location 0.0 0.2 0.05
+  location 0 0.2 0.05
   radius 0.055
   castShadows TRUE
-}PointLight {
+}
+PointLight {
   attenuation 0.2 0.2 0.2
   color 0 1 0
   intensity 10
   location 0.2 0.1 0.05
   radius 0.055
   castShadows TRUE
-}Robot {
-  translation 0.0 0.1 0
-  children [
-    E-puck {
-      rotation 0 0 1 1.5707963267948966
-      name "epuck1"
-      controller "epuck_pick_rewards"
-      supervisor TRUE
-      distance_sensor_numberOfRays 10
-      groundSensorsSlot [
-        DistanceSensor {
-          translation 0 -0.01 0.033
-          rotation 0.48666426339228763 0.3244428422615251 0.8111071056538127 -0.3926996938995747
-          name "gs0"
-          type "infra-red"
-          numberOfRays 10
-          aperture 0.02
-        }
-        DistanceSensor {
-          translation -0.008 -0.025 0.033
-          rotation -0.4551040991908595 0.398216086792002 0.796432173584004 -0.9162996938995747
-          name "gs1"
-          type "infra-red"
-          numberOfRays 10
-          aperture 0.02
-        }
-        DistanceSensor {
-          translation -0.03 -0.031 0.033
-          rotation 0 0.1521964418307445 0.9883502633652004 -1.5708003061004252
-          name "gs2"
-          type "infra-red"
-          numberOfRays 10
-          aperture 0.02
-        }
-        DistanceSensor {
-          translation -0.03 0.031 0.033
-          rotation 0 -0.15219643789055118 0.9883502639719522 1.5708
-          name "gs5"
-          type "infra-red"
-          numberOfRays 10
-          aperture 0.02
-        }
-        DistanceSensor {
-          translation -0.008 0.025 0.033
-          rotation -0.41387830310614976 -0.3415500559613857 0.8438295500222471 0.9163
-          name "gs6"
-          type "infra-red"
-          numberOfRays 10
-          aperture 0.02
-        }
-        DistanceSensor {
-          translation 0 0.01 0.033
-          rotation 0.4763190755274476 -0.2857914453164686 0.8315307499260636 0.3927
-          name "gs7"
-          type "infra-red"
-          numberOfRays 10
-          aperture 0.02
-        }
-      ]
-
-    }
-  ]
-  physics Physics {
-    density 1
-  }
-}Robot {
+}
+Robot {
   translation -0.2 -0.2 0
   children [
     E-puck {
-      rotation 0 0 1 0.0
       name "epuck2"
-      controller "epuck_pick_rewards"
+      controller "testing_movement"
       supervisor TRUE
       distance_sensor_numberOfRays 10
       groundSensorsSlot [
@@ -245,7 +185,6 @@ PointLight {
           aperture 0.02
         }
       ]
-
     }
   ]
   physics Physics {
