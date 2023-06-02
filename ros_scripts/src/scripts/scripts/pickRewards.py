@@ -501,12 +501,14 @@ class PickRewards:
                                 pos[0] += adv[0]
                                 pos[1] += adv[1]
                         instruction = 1 + temp_instructions[1]
-                        ammount = empty_blocks-1
+                        ammount = empty_blocks
                         ori = cur_obj
                         self.bot_instructions[i].append([instruction,ammount])
                         #print("INSTRUCTION ADDED ({},{}):\n{} added turning in direction {} after an advand of {} empty blocks".format(instruction, ammount, bot[0],instruction,empty_blocks))
 
                 else:
+                    if self.bot_instructions[i][-1][0] == 1 or self.bot_instructions[i][-1][0] == 2:
+                        blocks -= 1
                     self.bot_instructions[i].append([4,blocks])
                     #print("INSTRUCTION ADDED ({},{}):\n{} added forward advance of {} blocks".format(4, blocks, bot[0],blocks))
             print("{}'s list of instructions is: {}".format(bot[0],self.bot_instructions[i]))
@@ -534,11 +536,107 @@ class PickRewards:
         print("_______________________________")
         print("_______________________________")
 
+    def get_ori_angle(self,ori):
+        if ori == 'N':
+            return math.pi*1/2
+        if ori == 'S':
+            return math.pi*3/2
+        if ori == 'E':
+            return math.pi*0/2
+        if ori == 'W':
+            return math.pi*2/2
+
+    def write_world_file(self):
+        
+        #Set the world and arena
+        world = '#VRML_SIM R2023a utf8\n\nEXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/objects/backgrounds/protos/TexturedBackground.proto"\nEXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"\nEXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/objects/floors/protos/RectangleArena.proto"\nEXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/robots/gctronic/e-puck/protos/E-puck.proto"\nEXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/objects/factory/containers/protos/WoodenBox.proto"\nEXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/appearances/protos/Parquetry.proto"\n\n'
+        world += 'WorldInfo {\n  basicTimeStep 16\n}\n'
+        camHeight = self.width
+        if self.height > camHeight:
+            camHeight = self.height
+        world += 'Viewpoint {\n  orientation -0.5773502691896258 0.5773502691896258 0.5773502691896258 2.0944\n  position 0 0 ' + str(camHeight/2) + '\n}\n'
+        world += 'TexturedBackground {\n  skyColor [\n    0 0 0.5\n  ]\n}\n'
+        world += 'TexturedBackgroundLight {\n  castShadows FALSE\n}\n'
+        sY, sX = len(self.map)/10.0, len(self.map[0])/10.0
+        world += 'RectangleArena {\n  translation 0 0 0\n  floorSize ' + str(sX) + ' ' + str(sY) + '\n  floorTileSize 0.25 0.255\n  floorAppearance Parquetry {\n    type "chequered"\n    colorOverride 0 0 0\n  }\n  wallHeight 0.05\n}\n'
+        
+        #Set the obstacles
+        n = 0
+        for i in range(0,len(self.map)):
+            for j in range(0,len(self.map[i])):
+                if self.map[i][j] == 1:
+                    x = 0.1*(j-(self.width-1)/2)
+                    y = 0.1*((self.height-1)/2-i)
+                    world += 'WoodenBox {\n   translation '+str(x) + ' ' + str(y) + ' 0.05\n  name "obs' + str(n) +'"\n  size 0.1 0.1 0.1\n}\n'
+                    n += 1
+
+        #Set the rewards
+        for i in self.rwd_configuration:
+            x = 0.1*(i[0]-(self.width-1)/2)
+            y = 0.1*((self.height-1)/2-i[1])
+            world += 'PointLight {\n  attenuation 0.2 0.2 0.2\n  color 0 1 0\n  intensity 10\n  location '+str(x) + ' ' + str(y) + ' 0.05\n  radius 0.055\n  castShadows TRUE\n}'
+
+        #Set the robots
+        for bot in self.bot_configuration:
+            name = bot[0]
+            x = 0.1*(bot[1][0]-(self.width-1)/2)
+            y = 0.1*((self.height-1)/2-bot[1][1])
+            ori = self.get_ori_angle(bot[2])
+            sensors = '      groundSensorsSlot [\n        DistanceSensor {\n          translation 0 -0.01 0.033\n          rotation 0.48666426339228763 0.3244428422615251 0.8111071056538127 -0.3926996938995747\n          name "gs0"\n          type "infra-red"\n          numberOfRays 10\n          aperture 0.02\n        }\n        DistanceSensor {\n          translation -0.008 -0.025 0.033\n          rotation -0.4551040991908595 0.398216086792002 0.796432173584004 -0.9162996938995747\n          name "gs1"\n          type "infra-red"\n          numberOfRays 10\n          aperture 0.02\n        }\n        DistanceSensor {\n          translation -0.03 -0.031 0.033\n          rotation 0 0.1521964418307445 0.9883502633652004 -1.5708003061004252\n          name "gs2"\n          type "infra-red"\n          numberOfRays 10\n          aperture 0.02\n        }\n        DistanceSensor {\n          translation -0.03 0.031 0.033\n          rotation 0 -0.15219643789055118 0.9883502639719522 1.5708\n          name "gs5"\n          type "infra-red"\n          numberOfRays 10\n          aperture 0.02\n        }\n        DistanceSensor {\n          translation -0.008 0.025 0.033\n          rotation -0.41387830310614976 -0.3415500559613857 0.8438295500222471 0.9163\n          name "gs6"\n          type "infra-red"\n          numberOfRays 10\n          aperture 0.02\n        }\n        DistanceSensor {\n          translation 0 0.01 0.033\n          rotation 0.4763190755274476 -0.2857914453164686 0.8315307499260636 0.3927\n          name "gs7"\n          type "infra-red"\n          numberOfRays 10\n          aperture 0.02\n        }\n      ]\n'
+            world += 'Robot {\n  translation ' + str(x) + ' ' + str(y) + ' 0\n  children [\n    E-puck {\n      rotation 0 0 1 ' + str(ori) + '\n      name "' + name + '"\n      controller "' + self.controller +  '"\n      supervisor TRUE\n      distance_sensor_numberOfRays 10\n'+sensors +'\n    }\n  ]\n  physics Physics {\n    density 1\n  }\n}'
+
+        with open(self.world_route,'w') as file:
+            file.write(world)
+        
+
+    def from_bot_callback(self,data):
+        #print("Received: {}".format(data.data))
+        info = data.data.split('||')
+        msg_id = int(info[0])
+        if msg_id == 0:
+            i = int(''.join(filter(str.isdigit, info[1])))-1
+            bot = self.bot_configuration[i]
+            #print("The robot {} greeted us".format(bot[0]))
+            self.comms_ok[i] = True
+
+
+
     def initialize_ros(self):
-        pass
+        
+        #Create Node
+        rospy.init_node('master')
+
+        #Initialize publishers to bots
+        for i in self.bot_configuration:
+            name = "MasterTo{}".format(i[0])
+            self.publishers.append(rospy.Publisher(name,String,queue_size = 1))
+            self.comms_ok.append(False)
+
+        #Initialize subscribers
+        for i in self.bot_configuration:
+            name = "{}ToMaster".format(i[0])
+            self.subscribers.append(rospy.Subscriber(name,String, callback = self.from_bot_callback))
+        
+    def send_greeting(self):
+        print("_______________________________")
+        print("_______________________________")
+        print("SENDING GREETINGS")
+        print("_______________________________")
+        print("_______________________________")
+        while not all(self.comms_ok):
+            for i in range(0,len(self.bot_configuration)):
+                if not self.comms_ok[i]:
+                    msg = "0||"+str(self.bot_instructions[i])
+                    self.publishers[i].publish(msg)
+
+        print("All comms OK!")
+        print("NOW LOGGING...")
+        rospy.spin()
+
 
     def __init__(self):
         self.route = "./../data/"
+        self.world_route = "./../worlds/webots.wbt"
         self.map = None
         self.bot_map = None
         self.rwd_map = None
@@ -553,12 +651,24 @@ class PickRewards:
         self.bot_paths = None
         self.bot_routes = None
         self.bot_instructions = None
+        self.controller = 'epuck_pick_rewards'
         self.bot_rotation_matrix = [[0,2,3,1],[2,0,1,3],[1,3,0,2],[3,1,2,0]]
+        self.publishers = []
+        self.comms_ok = []
+        self.subscribers = []
         print("The pick rewards task consists of giving instructions to a group of robots to find and 'pick-up' some rewards on the environment.")
 
         #Set upo the task
         self.set_up_task()
 
+        #Write the world file
+        self.write_world_file()
+
         #Initialize ROS
+        self.initialize_ros()
+
+        #Send initial message
+        self.send_greeting()
+
 
 
