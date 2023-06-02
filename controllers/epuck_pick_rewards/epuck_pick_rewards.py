@@ -29,6 +29,14 @@ def measure_sensors():
     l = sl.getValue() 
     rw = r_sensor.getValue()
     lw = l_sensor.getValue()
+    s = ''
+    s += '---------------------------\n'
+    s += '{}:'.format(name)
+    #s += 'front:\n({},{})\n'.format(fl,fr)
+    #s += 'front2:\n({},{})\n'.format(fll,frr)
+    #s += 'sides:\n({},{})\n'.format(l,r)
+    #s += 'wheels:\n({},{})\n'.format(lw,rw)
+    #print(s)
     
 
 def adjust_speed():
@@ -74,8 +82,8 @@ if __name__ == '__main__':
     #SET GLOBAL CONSTANTS
     MAX_SPEED = 1
     TIME_STEP = int(robot.getBasicTimeStep())
-    R_SPEED = MAX_SPEED/2
-    L_SPEED = MAX_SPEED/2
+    R_SPEED = MAX_SPEED
+    L_SPEED = MAX_SPEED
     DIAMETER = 71
     SSENSOR_OFFSET = 4.5
     WHEEL_RADIUS = 20.5
@@ -98,6 +106,7 @@ if __name__ == '__main__':
     turning = False
     last_reading = 0
     ended = False
+    just_rotated = False
     
     #INITIALIZE THE SENSORS
     print("Initializing sensors")
@@ -172,8 +181,8 @@ if __name__ == '__main__':
                     delta = amm * unit_rot
                     obj_r = rw + delta*1.3
                     obj_l = lw - delta*1.3
-                    lMotor.setVelocity(-L_SPEED*2)
-                    rMotor.setVelocity(R_SPEED*2)
+                    lMotor.setVelocity(-L_SPEED)
+                    rMotor.setVelocity(R_SPEED)
                     
                 elif state == 1:
                     #Set up the vars to turn right
@@ -185,6 +194,10 @@ if __name__ == '__main__':
                     last_reading = 0
                     lMotor.setVelocity(L_SPEED)
                     rMotor.setVelocity(R_SPEED)
+                    if just_rotated:
+                        if r > 800:
+                            obj_blocks += 1
+                    just_rotated = False
                 elif state == 2:
                     #Set up the vars to turn left
                     print("Gotta turn left")
@@ -195,20 +208,26 @@ if __name__ == '__main__':
                     last_reading = 0
                     lMotor.setVelocity(L_SPEED)
                     rMotor.setVelocity(R_SPEED)
+                    if just_rotated:
+                        if l > 800:
+                            obj_blocks += 1
+                    just_rotated = False
                     pass
                 elif state == 4:
                     #Set up the vars to go forward
                     print("Gotta go forward")
-                    delta = amm * 2*math.pi
+                    delta = amm * 2*math.pi*(100/(2*WHEEL_RADIUS*math.pi))
                     obj_r = rw + delta*(1-FORWARD_OFFSET)
                     obj_l = lw + delta*(1-FORWARD_OFFSET)
                     lMotor.setVelocity(L_SPEED)
                     rMotor.setVelocity(R_SPEED)
+                    just_rotated = False
             else:
                 measure_sensors()
                 if state == 0:
                     if rw > obj_r or lw < obj_l:
                         print("rot ended")
+                        just_rotated = True
                         lMotor.setVelocity(0)
                         rMotor.setVelocity(0)
                         step += 1
