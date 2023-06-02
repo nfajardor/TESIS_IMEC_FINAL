@@ -4,6 +4,7 @@ import rospy
 from std_msgs.msg import String
 from controller import Robot
 import math
+import time
 
 def inRange(value):
     global SIDEFRONT_ANGLE
@@ -75,6 +76,11 @@ def epuck_callback(data):
     
 
 if __name__ == '__main__':
+    #Metrics
+    start_time = int(round(time.time()*1000))
+    r_rotation = 0
+    l_rotation = 0
+    n_turns = 0
     # create the Robot instance.
     robot = Robot()
     name = robot.getName()
@@ -107,6 +113,7 @@ if __name__ == '__main__':
     last_reading = 0
     ended = False
     just_rotated = False
+
     
     #INITIALIZE THE SENSORS
     print("Initializing sensors")
@@ -160,6 +167,10 @@ if __name__ == '__main__':
 
     while robot.step(TIME_STEP) != -1:
         measure_sensors()
+        bef_r = rw
+        bef_l = lw
+        inp_rot = False
+        
         # Read the sensors:
         #s = ''
         #s += '---------------------------\n'
@@ -177,16 +188,17 @@ if __name__ == '__main__':
                 state = inst
                 if state == 0:
                     #Set up the vars to rotate in place
-                    print("gotta rotate in place: {},{}".format(lw,rw))
+                    #print("gotta rotate in place: {},{}".format(lw,rw))
                     delta = amm * unit_rot
                     obj_r = rw + delta*1.3
                     obj_l = lw - delta*1.3
                     lMotor.setVelocity(-L_SPEED)
                     rMotor.setVelocity(R_SPEED)
+                    n_turns += 1
                     
                 elif state == 1:
                     #Set up the vars to turn right
-                    print("Gotta turn right")
+                    #print("Gotta turn right")
                     obj_blocks = amm
                     cur_blocks = 0
                     inBlock = True
@@ -198,9 +210,10 @@ if __name__ == '__main__':
                         if r > 800:
                             obj_blocks += 1
                     just_rotated = False
+                    n_turns += 1
                 elif state == 2:
                     #Set up the vars to turn left
-                    print("Gotta turn left")
+                    #print("Gotta turn left")
                     obj_blocks = amm
                     cur_blocks = 0
                     inBlock = True
@@ -212,10 +225,10 @@ if __name__ == '__main__':
                         if l > 800:
                             obj_blocks += 1
                     just_rotated = False
-                    pass
+                    n_turns += 1
                 elif state == 4:
                     #Set up the vars to go forward
-                    print("Gotta go forward")
+                    #print("Gotta go forward")
                     delta = amm * 2*math.pi*(100/(2*WHEEL_RADIUS*math.pi))
                     obj_r = rw + delta*(1-FORWARD_OFFSET)
                     obj_l = lw + delta*(1-FORWARD_OFFSET)
@@ -225,8 +238,9 @@ if __name__ == '__main__':
             else:
                 measure_sensors()
                 if state == 0:
+                    inp_rot = True
                     if rw > obj_r or lw < obj_l:
-                        print("rot ended")
+                        #print("rot ended")
                         just_rotated = True
                         lMotor.setVelocity(0)
                         rMotor.setVelocity(0)
@@ -253,7 +267,7 @@ if __name__ == '__main__':
                     else:
                         to_end = r/frr
                         if inRange(to_end) and r < 900 and frr < 900:
-                            print("turning ended: {}/{}".format(r,frr))
+                            #print("turning ended: {}/{}".format(r,frr))
                             lMotor.setVelocity(0)
                             rMotor.setVelocity(0)
                             step += 1
@@ -281,7 +295,7 @@ if __name__ == '__main__':
                     else:
                         to_end = l/fll
                         if inRange(to_end) and l < 900 and fll < 900:
-                            print("turning ended: {}/{}".format(l,fll))
+                            #print("turning ended: {}/{}".format(l,fll))
                             lMotor.setVelocity(0)
                             rMotor.setVelocity(0)
                             step += 1
@@ -292,15 +306,22 @@ if __name__ == '__main__':
                 elif state == 4:
                     adjust_speed()
                     if rw > obj_r or lw > obj_l:
-                        print("forward ended")
+                        #print("forward ended")
                         lMotor.setVelocity(0)
                         rMotor.setVelocity(0)
                         step += 1
                         state = 3
+        
+
         else:
             if not ended:
+                measure_sensors()
                 ended = True
-                print("{} - ALL DONE".format(name))
+                end_time = int(round(time.time()*1000))
+                delta_t = end_time - start_time
+                r_rotation = rw / (2*math.pi)
+                l_rotation = lw / (2*math.pi)
+                print("{} - ALL DONE\nTime: {}ms\nTotal turns: {}\nTotal wheel revolutions: R-{},L-{}\n______________________".format(name, delta_t,n_turns,r_rotation,l_rotation))
     
 
 
