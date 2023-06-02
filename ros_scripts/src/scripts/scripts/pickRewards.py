@@ -597,7 +597,7 @@ class PickRewards:
             i = int(''.join(filter(str.isdigit, info[1])))-1
             bot = self.bot_configuration[i]
             #print("The robot {} greeted us".format(bot[0]))
-            self.comms_ok[i] = True
+            #self.comms_ok[i] = True
 
 
 
