@@ -180,7 +180,12 @@ if __name__ == '__main__':
                     pass
                 elif state == 4:
                     #Set up the vars to go forward
-                    pass
+                    print("Gotta go forward")
+                    delta = amm * 2*math.pi
+                    obj_r = rw + delta
+                    obj_l = lw + delta
+                    lMotor.setVelocity(L_SPEED)
+                    rMotor.setVelocity(R_SPEED)
             else:
                 measure_sensors()
                 if state == 0:
@@ -248,6 +253,14 @@ if __name__ == '__main__':
                             rMotor.setVelocity(R_SPEED*(last_reading/10+54.5)/(last_reading/10+31))
                             lMotor.setVelocity(L_SPEED*(last_reading/10+4.5)/(last_reading/10+31))
                 elif state == 4:
-                    pass
+                    adjust_speed()
+                    if rw > obj_r or lw > obj_l:
+                        print("forward ended")
+                        lMotor.setVelocity(0)
+                        rMotor.setVelocity(0)
+                        step += 1
+                        state = 3
+        else:
+            print("All Done")
                     
                 
