@@ -4,6 +4,14 @@ from controller import Robot
 import math
 import time
 
+
+def inRange(value):
+    global SIDEFRONT_ANGLE
+    global TURNING_OFFSET
+    x = math.cos(SIDEFRONT_ANGLE)
+    if (value > (x*(1.0 - TURNING_OFFSET))) and (value < (x*(1.0 + TURNING_OFFSET))):
+        return True
+    return False
 def measure_sensors():
     global fr 
     global fl 
@@ -23,7 +31,29 @@ def measure_sensors():
     lw = l_sensor.getValue()
     
 
-
+def adjust_speed():
+    global r
+    global l
+    measure_sensors()
+    if r < 600 and l < 600:
+        d = r - l
+        d_max = 100
+        d_abs = abs(d)
+        mapped_offset = d_abs*FORWARD_OFFSET/d_max
+        if d_abs > 50:
+            if d > 0:
+                lMotor.setVelocity(L_SPEED*(1+mapped_offset))
+                rMotor.setVelocity(R_SPEED*(1-mapped_offset))
+            else:
+                lMotor.setVelocity(L_SPEED*(1-mapped_offset))
+                rMotor.setVelocity(R_SPEED*(1+mapped_offset))
+    else:
+        if l < 160:
+            lMotor.setVelocity(L_SPEED*(1+FORWARD_OFFSET))
+            rMotor.setVelocity(R_SPEED*(1-FORWARD_OFFSET))
+        elif r < 160:
+            lMotor.setVelocity(L_SPEED*(1-FORWARD_OFFSET))
+            rMotor.setVelocity(R_SPEED*(1+FORWARD_OFFSET))
 
 if __name__ == '__main__':
     # create the Robot instance.
@@ -39,11 +69,11 @@ if __name__ == '__main__':
     SSENSOR_OFFSET = 4.5
     WHEEL_RADIUS = 20.5
     WHEEL_DISTANCE = 53
-    FORWARD_OFFSET = 0.00
+    FORWARD_OFFSET = 0.04
     SIDEFRONT_ANGLE = 0.77
     FRONTSIDE_DISTANCE = 33.3
-    TURNING_OFFSET = 0.03
-    route = [[0,1],[1,1],[1,2],[4,1]]
+    TURNING_OFFSET = 0.04
+    route = [[0,1],[1,1],[2,2],[4,1]]
     route_length = len(route)
     step = 0
     state = 3 #0: rotate in place. 1: turn right. 2: turn left. 3: awaiting instructions. 4: go forward
@@ -52,9 +82,11 @@ if __name__ == '__main__':
     obj_r = 0
     obj_l = 0
     unit_rot = math.pi/2
-    blocks = 0
+    cur_blocks = 0
+    obj_blocks = 0
     inBlock = True
     turning = False
+    last_reading = 0
     
     #INITIALIZE THE SENSORS
     print("Initializing sensors")
@@ -128,13 +160,23 @@ if __name__ == '__main__':
                 elif state == 1:
                     #Set up the vars to turn right
                     print("Gotta turn right")
-                    blocks = amm
+                    obj_blocks = amm
+                    cur_blocks = 0
                     inBlock = True
                     turning = False
+                    last_reading = 0
                     lMotor.setVelocity(L_SPEED)
                     rMotor.setVelocity(R_SPEED)
                 elif state == 2:
                     #Set up the vars to turn left
+                    print("Gotta turn left")
+                    obj_blocks = amm
+                    cur_blocks = 0
+                    inBlock = True
+                    turning = False
+                    last_reading = 0
+                    lMotor.setVelocity(L_SPEED)
+                    rMotor.setVelocity(R_SPEED)
                     pass
                 elif state == 4:
                     #Set up the vars to go forward
@@ -149,9 +191,62 @@ if __name__ == '__main__':
                         step += 1
                         state = 3
                 elif state == 1:
-                    print("we gonna turn right")
+                    
+                    #print("we gonna turn right")
+                    if not turning:
+                        adjust_speed()
+                        if inBlock:
+                            if r > 350:
+                                inBlock = False
+                                cur_blocks += 1
+                                if cur_blocks == obj_blocks:
+                                    turning = True
+                                else:
+                                    inBlock = False
+                            else:
+                                last_reading = r
+                        else:
+                            if r < 250:
+                                inBlock = True
+                    else:
+                        to_end = r/frr
+                        if inRange(to_end) and r < 900 and frr < 900:
+                            print("turning ended: {}/{}".format(r,frr))
+                            lMotor.setVelocity(0)
+                            rMotor.setVelocity(0)
+                            step += 1
+                            state = 3
+                        else:
+                            lMotor.setVelocity(L_SPEED*(last_reading/10+54.5)/(last_reading/10+31))
+                            rMotor.setVelocity(R_SPEED*(last_reading/10+4.5)/(last_reading/10+31))
                 elif state == 2:
-                    pass
+                    #print("we gonna turn right")
+                    if not turning:
+                        adjust_speed()
+                        if inBlock:
+                            if l > 350:
+                                inBlock = False
+                                cur_blocks += 1
+                                if cur_blocks == obj_blocks:
+                                    turning = True
+                                else:
+                                    inBlock = False
+                            else:
+                                last_reading = l
+                        else:
+                            if l < 250:
+                                inBlock = True
+                    else:
+                        to_end = l/fll
+                        if inRange(to_end) and l < 900 and fll < 900:
+                            print("turning ended: {}/{}".format(l,fll))
+                            lMotor.setVelocity(0)
+                            rMotor.setVelocity(0)
+                            step += 1
+                            state = 3
+                        else:
+                            rMotor.setVelocity(R_SPEED*(last_reading/10+54.5)/(last_reading/10+31))
+                            lMotor.setVelocity(L_SPEED*(last_reading/10+4.5)/(last_reading/10+31))
                 elif state == 4:
                     pass
                     
