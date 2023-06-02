@@ -322,6 +322,7 @@ if __name__ == '__main__':
                 r_rotation = rw / (2*math.pi)
                 l_rotation = lw / (2*math.pi)
                 print("{} - ALL DONE\nTime: {}ms\nTotal turns: {}\nTotal wheel revolutions: R-{},L-{}\n______________________".format(name, delta_t,n_turns,r_rotation,l_rotation))
-    
-
+                msg = "1||{}||[{},{},[{:.3f},{:.3f}]]".format(name,delta_t,n_turns,r_rotation,l_rotation)
+                print("MSG is: {}".format(msg))
+                pub.publish(msg)
 

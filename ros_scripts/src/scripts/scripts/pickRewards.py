@@ -597,8 +597,12 @@ class PickRewards:
             i = int(''.join(filter(str.isdigit, info[1])))-1
             bot = self.bot_configuration[i]
             #print("The robot {} greeted us".format(bot[0]))
-            #self.comms_ok[i] = True
-
+            self.comms_ok[i] = True
+        if msg_id == 1:
+            loggable_info = eval(info[2])
+            print("_______________________________")
+            print("Recieved end msg from {}:\nTime taken: {}ms\nTurns made: {}\nRight wheel revs: {}\nLeft wheel revs: {}".format(info[1],loggable_info[0],loggable_info[1],loggable_info[2][0],loggable_info[2][1]))
+            print("_______________________________")
 
 
     def initialize_ros(self):
