@@ -228,7 +228,7 @@ class MapCreator:
             except:
                 print("Please input a valid value for the height (an integer greater than 0)")
         stepOk = False
-        print("Input the odds (out of 1000) of creating adding cycles to the MST path: ")
+        print("Input the odds (out of 1000) of adding cycles to the MST: ")
         while not stepOk:
             try:
                 prob_cycle = int(input())
@@ -236,7 +236,7 @@ class MapCreator:
             except:
                 print("Please input a valid value for the odds")
         stepOk = False
-        print("Input the odds (out of 1000) of creating adding cycles to the MST path: ")
+        print("Input the weight (out of 1000) of the obstacles in odd coordinates: ")
         while not stepOk:
             try:
                 prob_wall = int(input())
